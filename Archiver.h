@@ -6,15 +6,19 @@
 map<char, int> numb_charact;
 char sym;
 Node* root;
+int sizeText = 0;
 
 void createTree(ifstream& in)
 {
 	sym = in.get();
 	while (!in.eof())
 	{
+		sizeText++;
 		numb_charact[sym]++;
 		sym = in.get();
 	}
+
+	sizeALF = numb_charact.size();
 
 	list<Node*> heap_nodes;
 
@@ -43,7 +47,7 @@ void createTree(ifstream& in)
 	way(root);
 }
 
-void coder(const char* inFileName, const char* outFileName)
+void coder(const char* inFileName, const char*& outFileName)
 {
 	ifstream in(inFileName, ios::binary);
 	createTree(in);
@@ -52,6 +56,24 @@ void coder(const char* inFileName, const char* outFileName)
 	ofstream filezip(outFileName, ios::binary);// закодированные данные
 	int count = 0;//счётчик бит
 	char buf = 0;
+
+	countBit = 0;
+	bufTree = 0;
+	string str;
+	countSymTree = numb_charact.size();
+	filezip << trans(countSymTree);
+	filezip << '|';
+
+	writeInFile(filezip, root); //записываем дерево
+	if (countBit != 0)
+	{
+		filezip << bufTree;
+	}
+	countSymTree = temp.size();
+
+	filezip << temp;
+	filezip << trans(sizeText);
+	filezip << '|';
 
 	sym = in.get();
 	while (!in.eof())
@@ -76,19 +98,29 @@ void coder(const char* inFileName, const char* outFileName)
 		filezip << buf;
 	}
 
+
 	in.close();
 	filezip.close();
 }
 
-void decoder(const char* inFileName, const char* outFileName)
+void decoder(const char* inFileName, const char*& outFileName)
 {
 	ifstream in(inFileName, ios::binary);
 	ofstream out(outFileName, ios::binary);
 
+	root = readToFile(in);// читаем дерево
 	Node* pos = root;
 	int count = 0;
+	int i = 0;
 	char byte = in.get();
-	while (!in.eof())
+	while (byte != '|')
+	{
+		sizeText = sizeText * 10 + (byte - '0');
+		byte = in.get();
+	}
+
+	byte = in.get();
+	while (!in.eof() && i != sizeText)
 	{
 		bool b = byte & (1 << (7 - count));
 		if (b == 1)
@@ -100,6 +132,7 @@ void decoder(const char* inFileName, const char* outFileName)
 		{
 			out << pos->symbol;
 			pos = root;
+			i++;
 		}
 
 		count++;
